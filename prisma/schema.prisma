@@ -1,0 +1,226 @@
+// ============================================
+// TicketPilot — Prisma Schema
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------------------------------------
+// ENUMS
+// ------------------------------------------------
+
+enum PlanTier {
+  FREE
+  STARTER
+  GROWTH
+  SCALE
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  AGENT
+}
+
+enum HelpdeskProvider {
+  ZENDESK
+  INTERCOM
+}
+
+enum ConnectionStatus {
+  CONNECTED
+  DISCONNECTED
+  ERROR
+  PENDING
+}
+
+enum TicketClassification {
+  AUTO_RESOLVE
+  DRAFT_FOR_REVIEW
+  ESCALATE
+  UNCLASSIFIED
+}
+
+enum TicketStatus {
+  OPEN
+  PENDING_REVIEW
+  RESOLVED
+  ESCALATED
+  CLOSED
+}
+
+// ------------------------------------------------
+// CORE MODELS
+// ------------------------------------------------
+
+model Company {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  planTier         PlanTier @default(FREE)
+  ticketsUsedThisPeriod Int @default(0)
+  ticketLimitOverride   Int? // null = use plan default
+
+  users               User[]
+  helpdeskConnections HelpdeskConnection[]
+  tickets             Ticket[]
+  routingRules        RoutingRule[]
+  knowledgeBaseDocs   KnowledgeBaseDocument[]
+  subscription        Subscription?
+  auditLogs           AuditLog[]
+
+  aiTone String @default("friendly") // formal | casual | friendly
+
+  @@index([slug])
+}
+
+model User {
+  id            String   @id @default(cuid())
+  whopUserId    String   @unique
+  email         String   @unique
+  name          String?
+  role          UserRole @default(AGENT)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  auditLogs AuditLog[]
+
+  @@index([companyId])
+  @@index([whopUserId])
+}
+
+model HelpdeskConnection {
+  id           String            @id @default(cuid())
+  provider     HelpdeskProvider
+  status       ConnectionStatus  @default(PENDING)
+  accessToken  String            // encrypted at rest in production
+  refreshToken String?
+  externalDomain String?         // e.g. subdomain.zendesk.com
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  lastSyncedAt DateTime?
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  tickets Ticket[]
+
+  @@index([companyId])
+}
+
+model Ticket {
+  id               String                @id @default(cuid())
+  sourceTicketId   String                // ID in the external helpdesk
+  subject          String?
+  content          String                @db.Text
+  customerEmail    String?
+  customerTier     String?               // e.g. "vip", "standard"
+  sentiment        String?               // e.g. "positive", "neutral", "negative"
+
+  classification   TicketClassification  @default(UNCLASSIFIED)
+  status           TicketStatus          @default(OPEN)
+
+  aiDraftReply     String?               @db.Text
+  aiSummary        String?               @db.Text
+  finalReply       String?               @db.Text
+
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  resolvedAt        DateTime?
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  helpdeskConnectionId String
+  helpdeskConnection   HelpdeskConnection @relation(fields: [helpdeskConnectionId], references: [id], onDelete: Cascade)
+
+  @@unique([helpdeskConnectionId, sourceTicketId])
+  @@index([companyId])
+  @@index([status])
+  @@index([classification])
+}
+
+model RoutingRule {
+  id        String   @id @default(cuid())
+  name      String
+  priority  Int      @default(0)
+  isActive  Boolean  @default(true)
+
+  // Conditions stored as JSON: { field: "keyword" | "sentiment" | "customerTier" | "topic", operator: "equals" | "contains", value: string }
+  conditions Json
+  // Actions stored as JSON: { classification: TicketClassification, assignTo?: string }
+  actions    Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+}
+
+model KnowledgeBaseDocument {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  sourceType String  @default("manual") // manual | faq | past_ticket | doc_upload
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+}
+
+model Subscription {
+  id                   String              @id @default(cuid())
+  whopMembershipId     String              @unique
+  planTier             PlanTier            @default(FREE)
+  status               SubscriptionStatus  @default(TRIALING)
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  trialEndsAt          DateTime?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  companyId String  @unique
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // e.g. "ticket.approved", "connection.created", "plan.upgraded"
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([createdAt])
+}
