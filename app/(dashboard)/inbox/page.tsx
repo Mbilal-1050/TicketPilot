@@ -1,4 +1,5 @@
 // app/(dashboard)/inbox/page.tsx
+export const dynamic = "force-dynamic";
 import { db } from "@/lib/db";
 import { StatusTag } from "@/components/ui/status-tag";
 import { Button } from "@/components/ui/button";
