@@ -1,4 +1,5 @@
 // app/(dashboard)/admin/page.tsx
+export const dynamic = "force-dynamic";
 import { db } from "@/lib/db";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
