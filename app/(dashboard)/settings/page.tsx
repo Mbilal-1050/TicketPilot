@@ -1,4 +1,5 @@
 // app/(dashboard)/settings/page.tsx
+export const dynamic = "force-dynamic";
 import { db } from "@/lib/db";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
