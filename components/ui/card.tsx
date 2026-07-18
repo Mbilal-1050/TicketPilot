@@ -6,7 +6,7 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={clsx(
-        "bg-white border border-runway-100 rounded-lg shadow-card",
+        "bg-white dark:bg-runway-800 border border-runway-100 dark:border-runway-700 rounded-lg shadow-card transition-colors",
         className
       )}
       {...props}

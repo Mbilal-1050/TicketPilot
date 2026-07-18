@@ -8,11 +8,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Design tokens — "control tower" palette.
-        // Named for the aviation-instrument feel behind the TicketPilot brand,
-        // used sparingly (not literal plane/cloud iconography).
         runway: {
-          DEFAULT: "#12141C", // near-black ink, base dark surface
+          DEFAULT: "#12141C",
           50: "#F5F6F8",
           100: "#E7E9EE",
           200: "#C7CBD6",
@@ -24,10 +21,10 @@ module.exports = {
           800: "#181A21",
           900: "#12141C",
         },
-        cloud: "#F7F8FA", // light background
-        steel: "#5B6472", // secondary text / borders
+        cloud: "#F7F8FA",
+        steel: "#5B6472",
         beacon: {
-          DEFAULT: "#2B5FF6", // primary accent — signal/beacon blue
+          DEFAULT: "#2B5FF6",
           50: "#EBF0FE",
           100: "#D6E1FD",
           400: "#5580F8",
@@ -36,14 +33,14 @@ module.exports = {
           700: "#1836A8",
         },
         ember: {
-          DEFAULT: "#E85D3F", // escalation / urgent accent
+          DEFAULT: "#E85D3F",
           50: "#FDEEEA",
           100: "#FBDCD3",
           500: "#E85D3F",
           600: "#C7472B",
         },
         cleared: {
-          DEFAULT: "#1FAE7A", // auto-resolved / success accent
+          DEFAULT: "#1FAE7A",
           50: "#E7F8F1",
           100: "#C8EFDD",
           500: "#1FAE7A",
@@ -62,6 +59,20 @@ module.exports = {
       },
       boxShadow: {
         card: "0 1px 2px rgba(18, 20, 28, 0.06), 0 1px 8px rgba(18, 20, 28, 0.04)",
+      },
+      keyframes: {
+        "fade-in-up": {
+          "0%": { opacity: "0", transform: "translateY(12px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+      },
+      animation: {
+        "fade-in-up": "fade-in-up 0.6s ease-out both",
+        "fade-in": "fade-in 0.4s ease-out both",
       },
     },
   },

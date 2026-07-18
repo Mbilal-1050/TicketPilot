@@ -1,5 +1,5 @@
 // app/layout.tsx
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Inter, IBM_Plex_Mono } from "next/font/google";
 import { CookieConsent } from "@/components/cookie-consent";
 import "./globals.css";
@@ -7,6 +7,11 @@ import "./globals.css";
 const display = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", weight: ["500", "600", "700"] });
 const body = Inter({ subsets: ["latin"], variable: "--font-body" });
 const mono = IBM_Plex_Mono({ subsets: ["latin"], variable: "--font-mono", weight: ["400", "500", "600"] });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: "TicketPilot — Resolve 3x more tickets without hiring 3x more agents",
@@ -27,7 +32,21 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${display.variable} ${body.variable} ${mono.variable}`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const stored = localStorage.getItem('tp_theme');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const shouldBeDark = stored ? stored === 'dark' : prefersDark;
+                if (shouldBeDark) document.documentElement.classList.add('dark');
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body>
         {children}
         <CookieConsent />

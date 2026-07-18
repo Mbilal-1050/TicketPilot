@@ -1,4 +1,6 @@
 // lib/whop.ts
+// Central Whop client + plan mapping used across the app.
+
 import Whop from "@whop/sdk";
 
 if (!process.env.WHOP_API_KEY) {
@@ -26,9 +28,10 @@ export function planTierFromProductId(productId: string) {
   return PLAN_ID_MAP[productId] ?? null;
 }
 
-export function getCheckoutUrl(planProductId: string, metadata?: Record<string, string>) {
+export function getCheckoutUrl(planId: string, metadata?: Record<string, string>) {
   const params = new URLSearchParams({
     ...(metadata ?? {}),
   });
-  return `https://whop.com/checkout/${planProductId}/?${params.toString()}`;
+  const query = params.toString();
+  return `https://whop.com/checkout/${planId}${query ? `?${query}` : ""}`;
 }

@@ -1,16 +1,11 @@
 // app/api/checkout/route.ts
-//
-// Generates a Whop checkout URL for the requested plan and redirects
-// the user there. Actual plan upgrade happens via the webhook once
-// payment succeeds — never trust the client to self-report success.
-
 import { NextRequest, NextResponse } from "next/server";
 import { getCheckoutUrl } from "@/lib/whop";
 
 const PLAN_PRODUCT_IDS: Record<string, string | undefined> = {
-  starter: process.env.WHOP_STARTER_PLAN_ID,
-  growth: process.env.WHOP_GROWTH_PLAN_ID,
-  scale: process.env.WHOP_SCALE_PLAN_ID,
+  starter: process.env.WHOP_STARTER_CHECKOUT_PLAN_ID,
+  growth: process.env.WHOP_GROWTH_CHECKOUT_PLAN_ID,
+  scale: process.env.WHOP_SCALE_CHECKOUT_PLAN_ID,
 };
 
 export async function GET(req: NextRequest) {

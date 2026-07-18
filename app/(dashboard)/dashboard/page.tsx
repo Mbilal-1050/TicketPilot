@@ -1,18 +1,26 @@
 // app/(dashboard)/dashboard/page.tsx
 export const dynamic = "force-dynamic";
+
 import { db } from "@/lib/db";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { StatusTag } from "@/components/ui/status-tag";
 import { formatRelativeTime } from "@/lib/utils";
-
-// NOTE: hardcoded demo company slug for now — replace with the authenticated
-// user's company once Whop OAuth session handling is wired in.
-const DEMO_COMPANY_SLUG = "acme-outfitters";
+import { getCurrentCompanyId } from "@/lib/current-company";
 
 export default async function DashboardPage() {
+  const resolved = await getCurrentCompanyId();
+
+  if (!resolved) {
+    return (
+      <div className="p-6 md:p-10">
+        <p className="text-steel">No workspace found. Run <code className="font-mono bg-runway-100 px-1.5 py-0.5 rounded-sm">npm run db:seed</code> to populate demo data.</p>
+      </div>
+    );
+  }
+
   const company = await db.company.findUnique({
-    where: { slug: DEMO_COMPANY_SLUG },
+    where: { id: resolved.companyId },
     include: {
       tickets: { orderBy: { createdAt: "desc" }, take: 6 },
     },
@@ -20,8 +28,8 @@ export default async function DashboardPage() {
 
   if (!company) {
     return (
-      <div className="p-10">
-        <p className="text-steel">No workspace found. Run <code className="font-mono bg-runway-100 px-1.5 py-0.5 rounded-sm">npm run db:seed</code> to populate demo data.</p>
+      <div className="p-6 md:p-10">
+        <p className="text-steel">Workspace not found.</p>
       </div>
     );
   }
@@ -33,7 +41,14 @@ export default async function DashboardPage() {
   const resolveRate = Math.round((autoResolved / total) * 100);
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-6 md:p-8 max-w-6xl">
+      {resolved.isDemo && (
+        <div className="mb-6 bg-beacon-50 border border-beacon-100 rounded-DEFAULT px-4 py-3 text-sm text-beacon-700 flex items-center justify-between gap-3 flex-wrap">
+          <span>You&apos;re viewing sample data. Sign in with Whop to connect your own workspace.</span>
+          <a href="/api/auth/login" className="font-medium underline shrink-0">Sign in</a>
+        </div>
+      )}
+
       <header className="mb-8">
         <p className="text-xs font-mono text-steel uppercase tracking-wide mb-1">Control tower</p>
         <h1 className="text-2xl font-display font-semibold text-runway-900">Dashboard</h1>

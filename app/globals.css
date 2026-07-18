@@ -8,14 +8,17 @@
   }
 
   body {
-    @apply bg-cloud text-runway-900 font-body;
+    @apply bg-cloud text-runway-900 font-body transition-colors duration-300;
+  }
+
+  .dark body {
+    @apply bg-runway-900 text-runway-50;
   }
 
   h1, h2, h3, h4 {
     @apply font-display;
   }
 
-  /* Visible keyboard focus everywhere — never suppressed */
   :focus-visible {
     outline: 2px solid theme("colors.beacon.DEFAULT");
     outline-offset: 2px;
@@ -34,9 +37,4 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* Dark mode surface for the app shell (dashboard sidebar etc.) */
-.dark body {
-  @apply bg-runway-900 text-runway-50;
 }

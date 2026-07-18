@@ -1,29 +1,29 @@
 // app/(dashboard)/inbox/page.tsx
 export const dynamic = "force-dynamic";
+
 import { db } from "@/lib/db";
 import { StatusTag } from "@/components/ui/status-tag";
 import { Button } from "@/components/ui/button";
 import { formatRelativeTime } from "@/lib/utils";
-
-const DEMO_COMPANY_SLUG = "acme-outfitters";
+import { getCurrentCompanyId } from "@/lib/current-company";
 
 export default async function InboxPage() {
-  const company = await db.company.findUnique({ where: { slug: DEMO_COMPANY_SLUG } });
-  if (!company) {
-    return <div className="p-10 text-steel">No workspace found. Run the seed script first.</div>;
+  const resolved = await getCurrentCompanyId();
+  if (!resolved) {
+    return <div className="p-6 md:p-10 text-steel">No workspace found. Run the seed script first.</div>;
   }
 
   const tickets = await db.ticket.findMany({
-    where: { companyId: company.id },
+    where: { companyId: resolved.companyId },
     orderBy: { createdAt: "desc" },
   });
 
   const pendingReview = tickets.filter((t) => t.status === "PENDING_REVIEW");
   const escalated = tickets.filter((t) => t.status === "ESCALATED");
-  const resolved = tickets.filter((t) => t.status === "RESOLVED");
+  const resolvedTickets = tickets.filter((t) => t.status === "RESOLVED");
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-6 md:p-8 max-w-5xl">
       <header className="mb-8">
         <p className="text-xs font-mono text-steel uppercase tracking-wide mb-1">Queue</p>
         <h1 className="text-2xl font-display font-semibold text-runway-900">Inbox</h1>
@@ -32,7 +32,7 @@ export default async function InboxPage() {
 
       <Section title="Needs your review" count={pendingReview.length} tickets={pendingReview} showActions />
       <Section title="Escalated" count={escalated.length} tickets={escalated} />
-      <Section title="Resolved" count={resolved.length} tickets={resolved} muted />
+      <Section title="Resolved" count={resolvedTickets.length} tickets={resolvedTickets} muted />
     </div>
   );
 }
@@ -70,7 +70,7 @@ function Section({
             >
               <StatusTag classification={t.classification} />
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-medium text-runway-900 text-sm truncate">{t.subject ?? "(no subject)"}</p>
                   <span className="text-xs text-steel font-mono shrink-0">{formatRelativeTime(t.createdAt)}</span>
                 </div>
